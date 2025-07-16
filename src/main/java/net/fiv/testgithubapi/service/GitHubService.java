@@ -1,8 +1,9 @@
 package net.fiv.testgithubapi.service;
 
 import net.fiv.testgithubapi.dto.BranchDto;
+import net.fiv.testgithubapi.model.Branch;
+import net.fiv.testgithubapi.model.Repository;
 import net.fiv.testgithubapi.dto.RepositoryDto;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -18,13 +19,12 @@ public class GitHubService {
 
     private final RestTemplate restTemplate;
 
-    public GitHubService(RestTemplateBuilder builder) {
-        this.restTemplate = builder.build();
+    public GitHubService(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
     }
 
     public List<RepositoryDto> getUserRepositories(String username) {
         String repoUrl = "https://api.github.com/users/" + username + "/repos";
-
         try {
             ResponseEntity<Repository[]> response = restTemplate.getForEntity(repoUrl, Repository[].class);
 
@@ -50,33 +50,5 @@ public class GitHubService {
         return Arrays.stream(branches)
                 .map(branch -> new BranchDto(branch.getName(), branch.getCommit().getSha()))
                 .toList();
-    }
-
-    //DTO
-    private static class Repository {
-        private String name;
-        private Owner owner;
-        private boolean fork;
-
-        public String getName() { return name; }
-        public Owner getOwner() { return owner; }
-        public boolean isFork() { return fork; }
-    }
-
-    private static class Owner {
-        private String login;
-        public String getLogin() { return login; }
-    }
-
-    private static class Branch {
-        private String name;
-        private Commit commit;
-        public String getName() { return name; }
-        public Commit getCommit() { return commit; }
-    }
-
-    private static class Commit {
-        private String sha;
-        public String getSha() { return sha; }
     }
 }

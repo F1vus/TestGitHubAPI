@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api")
@@ -30,9 +31,9 @@ public class GitHubController {
         } catch (ResponseStatusException ex) {
             Map<String, Object> errorBody = Map.of(
                     "status", ex.getStatusCode().value(),
-                    "message", ex.getMessage()
+                    "message", Objects.requireNonNull(ex.getReason())
             );
-            return ResponseEntity.status(ex.getStatusCode()).body(errorBody);
+            return new ResponseEntity<>(errorBody, ex.getStatusCode());
         }
     }
 }
