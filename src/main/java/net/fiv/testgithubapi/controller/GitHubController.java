@@ -2,16 +2,12 @@ package net.fiv.testgithubapi.controller;
 
 import net.fiv.testgithubapi.dto.RepositoryDto;
 import net.fiv.testgithubapi.service.GitHubService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api")
@@ -24,17 +20,8 @@ public class GitHubController {
     }
 
     @GetMapping("/repos/{username}")
-    public ResponseEntity<?> getRepositories(@PathVariable String username) {
-        try {
-            List<RepositoryDto> repositories = service.getUserRepositories(username);
-            return ResponseEntity.ok(repositories);
-        } catch (ResponseStatusException ex) {
-            Map<String, Object> errorBody = Map.of(
-                    "status", ex.getStatusCode().value(),
-                    "message", Objects.requireNonNull(ex.getReason())
-            );
-            return new ResponseEntity<>(errorBody, ex.getStatusCode());
-        }
+    public List<RepositoryDto> getRepositories(@PathVariable String username) {
+            return service.getUserRepositories(username);
     }
 }
 

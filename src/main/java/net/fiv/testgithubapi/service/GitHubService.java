@@ -1,18 +1,18 @@
 package net.fiv.testgithubapi.service;
 
 import net.fiv.testgithubapi.dto.BranchDto;
+import net.fiv.testgithubapi.exception.NoSuchUserException;
 import net.fiv.testgithubapi.model.Branch;
 import net.fiv.testgithubapi.model.Repository;
 import net.fiv.testgithubapi.dto.RepositoryDto;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class GitHubService {
@@ -23,32 +23,31 @@ public class GitHubService {
         this.restTemplate = restTemplate;
     }
 
-    public List<RepositoryDto> getUserRepositories(String username) {
-        String repoUrl = "https://api.github.com/users/" + username + "/repos";
+    public List<RepositoryDto> getUserRepositories(final String username) {
+        final String repoUrl = "https://api.github.com/users/" + username + "/repos";
         try {
             ResponseEntity<Repository[]> response = restTemplate.getForEntity(repoUrl, Repository[].class);
-
 
             Repository[] allRepos = response.getBody();
 
             return Arrays.stream(allRepos)
                     .filter(repo -> !repo.isFork())
                     .map(repo -> {
-                        List<BranchDto> branches = getBranches(repo.getOwner().getLogin(), repo.getName());
+                        var branches = getBranches(repo.getOwner().getLogin(), repo.getName());
                         return new RepositoryDto(repo.getName(), repo.getOwner().getLogin(), branches);
-                    }).toList();
+                    }).collect(Collectors.toList());
 
         } catch (HttpClientErrorException.NotFound e) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found");
+            throw new NoSuchUserException("User not found");
         }
     }
 
-    private List<BranchDto> getBranches(String owner, String repoName) {
-        String branchesUrl = "https://api.github.com/repos/" + owner + "/" + repoName + "/branches";
+    private List<BranchDto> getBranches(final String owner, final String repoName) {
+        final String branchesUrl = "https://api.github.com/repos/" + owner + "/" + repoName + "/branches";
         ResponseEntity<Branch[]> response = restTemplate.getForEntity(branchesUrl, Branch[].class);
         Branch[] branches = response.getBody();
         return Arrays.stream(branches)
                 .map(branch -> new BranchDto(branch.getName(), branch.getCommit().getSha()))
-                .toList();
+                .collect(Collectors.toList());
     }
 }
